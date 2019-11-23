@@ -53,3 +53,4 @@ dkms.conf
 
 # ipython checkpoints
 .ipynb_checkpoints
+*checkpoint*
