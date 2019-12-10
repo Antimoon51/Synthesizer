@@ -7,68 +7,19 @@
 #include "audio.h"
 
 
-int16_t oszi1 = 0;
-int16_t oszi2 = 0;
-float right_float = 0;
-float left_float = 0;
-int32_t oszi1_OUT;
-int32_t oszi2_OUT;
-uint16_t var = 55;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<var<16000 annehmen
-int16_t out;
-float s;
 
-int16_t i = 0;
-float t = 0;
+uint16_t var = 55;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<var<16000 annehmen
 
 int16_t count;
-bool up = true;
 
+int16_t i = 0;
 
-void sawtooth(void){
-	
-	t = i;
-	t = t / count;
-	if (i++ > count / 2) i = -(count / 2);
-	out = t * 8000;
-}
-
-void square(void){
-	if (i == count / 2){
-		t = 1;
-	}
-	if (i == count){
-		t = -1;
-		i = 0;
-	}
-	i++;
-	out = t * 8000;
-}
-void triangle(void){
-	t = i;
-	t = 2 * (t / count);
-	if (up){
-		i++;
-	}
-	else if (!up){
-		i--;
-	}
-	if (i == (count / 4)){
-		up = false;
-	}
-	if (i == -(count / 4)){
-		up = true;
-	}
-	out = t * 8000;
-}
-
-
-void sine(void){
-	t = i;
-	t = t / 32000;
-	s = sin(2*PI*var*t);
-	out = s * 16000;
-	if (i++ == 32000) i = 0;
-}
+// functions:
+int triangle(void);
+int sine(void);
+int sawtooth(void);
+int square(void);
+int mix(int in1, int in2);
 	
 	
 // create GUI slider instance data structure
@@ -78,11 +29,6 @@ struct FM4_slider_struct FM4_GUI;
 void I2S_HANDLER(void) {
 	
 
-	
-
-	
-	
-	
 	// audio in
 	/*
 	Square workig, one side (needs to be doubled, audio_OUT expected 32Bit)
@@ -130,6 +76,8 @@ working triangle, needs to be doubled...
 //TEST:
 	/***********************************************************************************************************************************************
 	(1)
+	float right_float = 0;
+	float left_float = 0;
 	right_float = sin(2*PI*FM4_GUI.P_vals[0]*t);
 	left_float = sin(2*PI*FM4_GUI.P_vals[0]*t);
 	
@@ -152,6 +100,12 @@ working triangle, needs to be doubled...
 /*
 working
 */
+
+//int16_t oszi1 = 0;
+//int16_t oszi2 = 0;
+
+//int32_t oszi1_OUT;
+//int32_t oszi2_OUT;
 //	t = i;
 //	t = t / 32000;
 //	
@@ -164,9 +118,13 @@ working
 //	audio_OUT = (oszi1_OUT + oszi2_OUT);		//audio_OUT erwartet 32bit!!
 //	if (i++ == 32000)i=0;
 	
-	triangle();
 	
-	audio_OUT = ((out << 16) & 0xffff0000) + (out & 0x0000ffff);
+	int16_t oszi1;
+	int16_t oszi2;
+	oszi1 = sine();
+	oszi2 = square();
+	
+	audio_OUT = mix(oszi1, oszi2);			//¡audio_OUT expecting 32BIT!
 	
 	i2s_tx(audio_OUT);
 }
@@ -184,4 +142,75 @@ int main(void)
   while(1){
     update_slider_parameters(&FM4_GUI);
   }
+}
+
+// prototypes
+int sawtooth(void){
+	int16_t out;
+	float t;
+	t = i;
+	t = t / count;
+	if (i > count / 2) i = -(count / 2);
+	i++;
+	out = t * 8000;
+	return out;
+}
+
+int square(void){
+	int16_t out;
+	float t;
+	if (i == count / 2){
+		t = 1;
+	}
+	if (i == count){
+		t = -1;
+		i = 0;
+	}
+	i++;
+	out = t * 8000;
+	return out;
+}
+int triangle(void){
+	static bool up = true;
+	int16_t out;
+	float t;
+	t = i;
+	t = 2 * (t / count);
+	if (up){
+		i++;
+	}
+	else if (!up){
+		i--;
+	}
+	if (i == (count / 4)){
+		up = false;
+	}
+	if (i == -(count / 4)){
+		up = true;
+	}
+	out = t * 8000;
+	return out;
+}
+
+
+int sine(void){
+	float s;
+	int16_t out;
+	float t;
+	t = i;
+	t = t / 32000;
+	s = sin(2*PI*var*t);
+	out = s * 16000;
+	if (i++ == 32000) i = 0;
+	return out;
+}
+
+int mix(int in1, int in2){
+	int32_t array1;
+	int32_t array2;
+	int32_t out;
+	array1 = (((in1 / 2) << 16) & 0xffff0000) + ((in1 / 2) & 0x0000ffff);
+	array2 = (((in2 / 2) << 16) & 0xffff0000) + ((in2 / 2) & 0x0000ffff);
+	out = array1 + array2;
+	return out;
 }
