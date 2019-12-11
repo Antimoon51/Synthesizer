@@ -122,11 +122,11 @@ working
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = sawtooth(freq2, 3, 0);
+	oszi1 = sine(freq2, 1, 0);
 	//oszi1 = 0x00000000;
-	oszi2 = sawtooth(freq2, 3, 0);
+	oszi2 = triangle(freq2, 1, 0);
 	
-	audio_OUT = mix(oszi1, oszi2, 1, 1);			//¡audio_OUT expecting 32BIT!
+	audio_OUT = mix(oszi1, oszi2, 10, 10);			//¡audio_OUT expecting 32BIT!
 	i2s_tx(audio_OUT);
 }
 
@@ -172,10 +172,18 @@ int square(int freq, int oct, bool upshift){
 	int16_t count = 32000 / freq;
 	int16_t out;
 	float t;
-	if (i == count / 2){		//t = 1 for count/2<i<count
+	float x;
+	if (upshift){
+		x = (1<<oct);
+	}
+	else if (!upshift){
+		x = (1<<oct);
+		x = 1 / x;
+	}
+	if (i == count / (2 * x)){		//t = 1 for count/2<i<count
 		t = 1;
 	}
-	if (i == count){				//t = -1 for 0<i<count/2 ; i reset to 0
+	if (i == count / x){				//t = -1 for 0<i<count/2 ; i reset to 0
 		t = -1;
 		i = 0;
 	}
@@ -183,12 +191,23 @@ int square(int freq, int oct, bool upshift){
 	out = t * 8000;
 	return out;
 }
+
+
 int triangle(int freq, int oct, bool upshift){
 	static int16_t i = 0;
 	int16_t count = 32000 / freq;
 	static bool up = true;
 	int16_t out;
 	float t;
+	float x;
+	if (upshift){
+		x = (1<<oct);
+	}
+	else if (!upshift){
+		x = (1<<oct);
+		x = 1 / x;
+	}
+	
 	t = i;
 	t = 4 * (t / count);		//t is max (count / 4) so * 4 is needed vor normalisation to 1
 	if (up){
@@ -197,10 +216,10 @@ int triangle(int freq, int oct, bool upshift){
 	else if (!up){
 		i--;
 	}
-	if (i == (count / 4)){		//(count / 4) because the triangular wave consists of four quarter waves. The distance between (count / 4) and -(count / 4) is (count / 2) and is doubled, because the wave takes the way back, too.
+	if (i == (count / (4 * x))){		//(count / 4) because the triangular wave consists of four quarter waves. The distance between (count / 4) and -(count / 4) is (count / 2) and is doubled, because the wave takes the way back, too.
 		up = false;
 	}
-	if (i == -(count / 4)){
+	if (i == -(count / (4 * x))){
 		up = true;
 	}
 	out = t * 8000;
