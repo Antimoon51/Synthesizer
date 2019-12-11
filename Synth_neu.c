@@ -8,17 +8,18 @@
 
 
 
-uint16_t var = 55;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<var<16000 annehmen
+uint16_t freq1 = 55;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<var<16000 annehmen
+uint16_t freq2 = 110;
 
-int16_t count;
+//int16_t count;
 
-int16_t i = 0;
+//int16_t i = 0;
 
 // functions:
-int triangle(void);
-int sine(void);
-int sawtooth(void);
-int square(void);
+int triangle(int freq);
+int sine(int freq);
+int sawtooth(int freq);
+int square(int freq);
 int mix(int in1, int in2);
 	
 	
@@ -121,11 +122,12 @@ working
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = sine();
-	oszi2 = square();
+	oszi1 = triangle(freq1);
+	//oszi1 = 0x00000000;
+	oszi2 = sawtooth(freq2);
 	
 	audio_OUT = mix(oszi1, oszi2);			//¡audio_OUT expecting 32BIT!
-	
+	//i++;
 	i2s_tx(audio_OUT);
 }
 
@@ -137,7 +139,7 @@ int main(void)
   
 	audio_init(hz32000, line_in, intr, I2S_HANDLER);
   
-	count = 32000 / var;
+	
 
   while(1){
     update_slider_parameters(&FM4_GUI);
@@ -145,7 +147,9 @@ int main(void)
 }
 
 // prototypes
-int sawtooth(void){
+int sawtooth(int freq){
+	static int16_t i = 0;
+	int16_t count = 32000 / freq;
 	int16_t out;
 	float t;
 	t = i;
@@ -156,7 +160,9 @@ int sawtooth(void){
 	return out;
 }
 
-int square(void){
+int square(int freq){
+	static int16_t i = 0;
+	int16_t count = 32000 / freq;
 	int16_t out;
 	float t;
 	if (i == count / 2){
@@ -170,7 +176,9 @@ int square(void){
 	out = t * 8000;
 	return out;
 }
-int triangle(void){
+int triangle(int freq){
+	static int16_t i = 0;
+	int16_t count = 32000 / freq;
 	static bool up = true;
 	int16_t out;
 	float t;
@@ -193,13 +201,14 @@ int triangle(void){
 }
 
 
-int sine(void){
+int sine(int freq){
+	static int16_t i = 0;
 	float s;
 	int16_t out;
 	float t;
 	t = i;
 	t = t / 32000;
-	s = sin(2*PI*var*t);
+	s = sin(2*PI*freq*t);
 	out = s * 16000;
 	if (i++ == 32000) i = 0;
 	return out;
