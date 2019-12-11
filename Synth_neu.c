@@ -16,10 +16,10 @@ uint16_t freq2 = 110;
 //int16_t i = 0;
 
 // functions:
-int triangle(int freq);
-int sine(int freq);
-int sawtooth(int freq);
-int square(int freq);
+int triangle(int freq, int oct);
+int sine(int freq, int oct, bool upshift);
+int sawtooth(int freq, int oct);
+int square(int freq, int oct);
 int mix(int in1, int in2, int lvl1, int lvl2);
 	
 	
@@ -122,9 +122,9 @@ working
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = sine(freq1);
+	oszi1 = sine(freq2, 2, 0);
 	//oszi1 = 0x00000000;
-	oszi2 = triangle(freq1);
+	oszi2 = sine(freq2, 2, 0);
 	
 	audio_OUT = mix(oszi1, oszi2, 10, 10);			//¡audio_OUT expecting 32BIT!
 	i2s_tx(audio_OUT);
@@ -146,7 +146,7 @@ int main(void)
 }
 
 // prototypes
-int sawtooth(int freq){
+int sawtooth(int freq, int oct){
 	static int16_t i = 0;		//needs to be static, to be countetd each time function is called
 	int16_t count = 32000 / freq;			//count is the itervalltime
 	int16_t out;										//out is the funktions feedback
@@ -159,7 +159,7 @@ int sawtooth(int freq){
 	return out;
 }
 
-int square(int freq){
+int square(int freq, int oct){
 	static int16_t i = 0;
 	int16_t count = 32000 / freq;
 	int16_t out;
@@ -175,21 +175,21 @@ int square(int freq){
 	out = t * 8000;
 	return out;
 }
-int triangle(int freq){
+int triangle(int freq, int oct){
 	static int16_t i = 0;
 	int16_t count = 32000 / freq;
 	static bool up = true;
 	int16_t out;
 	float t;
 	t = i;
-	t = 4 * (t / count);
+	t = 4 * (t / count);		//t is max (count / 4) so * 4 is needed vor normalisation to 1
 	if (up){
 		i++;
 	}
 	else if (!up){
 		i--;
 	}
-	if (i == (count / 4)){
+	if (i == (count / 4)){		//(count / 4) because the triangular wave consists of four quarter waves. The distance between (count / 4) and -(count / 4) is (count / 2) and is doubled, because the wave takes the way back, too.
 		up = false;
 	}
 	if (i == -(count / 4)){
@@ -200,14 +200,22 @@ int triangle(int freq){
 }
 
 
-int sine(int freq){
+int sine(int freq, int oct, bool upshift){		//oct soll octave shifting brigen, dafür muss oct werte von 1,2,4,8,16 oder 1/2,1/4,1/8,1/16 annehmen
 	static int16_t i = 0;
 	float s;
 	int16_t out;
 	float t;
+	float x;
+	if (upshift){
+		x = (1<<oct);
+	}
+	else if (!upshift){
+		x = (1<<oct);
+		x = 1 / x;
+	}
 	t = i;
 	t = t / 32000;
-	s = sin(2*PI*freq*t);
+	s = sin(2*PI*x*freq*t);
 	out = s * 16000;
 	if (i++ == 32000) i = 0;
 	return out;
