@@ -122,9 +122,9 @@ working
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = sine(freq2, 2, 0);
+	oszi1 = sawtooth(freq2, 3, 0);
 	//oszi1 = 0x00000000;
-	oszi2 = sine(freq2, 2, 0);
+	oszi2 = sawtooth(freq2, 3, 0);
 	
 	audio_OUT = mix(oszi1, oszi2, 1, 1);			//¡audio_OUT expecting 32BIT!
 	i2s_tx(audio_OUT);
@@ -158,10 +158,8 @@ int sawtooth(int freq, int oct,  bool upshift){
 	else if (!upshift){
 		x = (1<<oct);
 		x = 1 / x;
-		}
-	
-	
-	t = 2 * i;
+	}
+	t = x * i;
 	t = t / count;				//t = i normalized to 1
 	if (i > count / (2 * x)) i = -(count / (2 * x));		//i rises to (count/2) and will be resetet to -(count/2)
 	i++;
