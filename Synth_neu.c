@@ -20,7 +20,7 @@ int triangle(int freq);
 int sine(int freq);
 int sawtooth(int freq);
 int square(int freq);
-int mix(int in1, int in2);
+int mix(int in1, int in2, int lvl1, int lvl2);
 	
 	
 // create GUI slider instance data structure
@@ -122,12 +122,11 @@ working
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = triangle(freq1);
+	oszi1 = sine(freq1);
 	//oszi1 = 0x00000000;
-	oszi2 = sawtooth(freq2);
+	oszi2 = triangle(freq1);
 	
-	audio_OUT = mix(oszi1, oszi2);			//¡audio_OUT expecting 32BIT!
-	//i++;
+	audio_OUT = mix(oszi1, oszi2, 10, 10);			//¡audio_OUT expecting 32BIT!
 	i2s_tx(audio_OUT);
 }
 
@@ -148,13 +147,13 @@ int main(void)
 
 // prototypes
 int sawtooth(int freq){
-	static int16_t i = 0;
-	int16_t count = 32000 / freq;
-	int16_t out;
+	static int16_t i = 0;		//needs to be static, to be countetd each time function is called
+	int16_t count = 32000 / freq;			//count is the itervalltime
+	int16_t out;										//out is the funktions feedback
 	float t;
-	t = i;
-	t = t / count;
-	if (i > count / 2) i = -(count / 2);
+	t = 2 * i;
+	t = t / count;				//t = i normalized to 1
+	if (i > count / 2) i = -(count / 2);		//i rises to (count/2) and will be resetet to -(count/2)
 	i++;
 	out = t * 8000;
 	return out;
@@ -165,10 +164,10 @@ int square(int freq){
 	int16_t count = 32000 / freq;
 	int16_t out;
 	float t;
-	if (i == count / 2){
+	if (i == count / 2){		//t = 1 for count/2<i<count
 		t = 1;
 	}
-	if (i == count){
+	if (i == count){				//t = -1 for 0<i<count/2 ; i reset to 0
 		t = -1;
 		i = 0;
 	}
@@ -183,7 +182,7 @@ int triangle(int freq){
 	int16_t out;
 	float t;
 	t = i;
-	t = 2 * (t / count);
+	t = 4 * (t / count);
 	if (up){
 		i++;
 	}
@@ -214,12 +213,14 @@ int sine(int freq){
 	return out;
 }
 
-int mix(int in1, int in2){
+int mix(int in1, int in2, int lvl1, int lvl2){		//in = input signals; lvl is a factor the corresponding signal is multiplied with, needs to be 1<lvl<10
 	int32_t array1;
 	int32_t array2;
 	int32_t out;
-	array1 = (((in1 / 2) << 16) & 0xffff0000) + ((in1 / 2) & 0x0000ffff);
-	array2 = (((in2 / 2) << 16) & 0xffff0000) + ((in2 / 2) & 0x0000ffff);
+	lvl1 = 11 - lvl1;
+	lvl2 = 11 - lvl2;
+	array1 = (((in1 / lvl1) << 16) & 0xffff0000) + ((in1 / lvl1) & 0x0000ffff);
+	array2 = (((in2 / lvl2) << 16) & 0xffff0000) + ((in2 / lvl2) & 0x0000ffff);
 	out = array1 + array2;
 	return out;
 }
