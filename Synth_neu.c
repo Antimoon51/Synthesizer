@@ -8,18 +8,18 @@
 
 
 
-uint16_t freq1 = 55;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<var<16000 annehmen
-uint16_t freq2 = 110;
+uint16_t freq1 = 75;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<freq<16000 annehmen
+uint16_t freq2 = 99;
 
-//int16_t count;
+//int16_t period;
 
 //int16_t i = 0;
 
 // functions:
-int triangle(int freq, int oct, bool upshift);
-int sine(int freq, int oct, bool upshift);
 int sawtooth(int freq, int oct, bool upshift);
 int square(int freq, int oct, bool upshift);
+int triangle(int freq, int oct, bool upshift);
+int sine(int freq, int oct, bool upshift);
 int mix(int in1, int in2, int lvl1, int lvl2);
 	
 	
@@ -33,49 +33,49 @@ void I2S_HANDLER(void) {
 	// audio in
 	/*
 	Square workig, one side (needs to be doubled, audio_OUT expected 32Bit)
-	*/
-//	if (i == count / 2){
+	*
+//	if (i == period / 2){
 //		t = 1;
 //	}
-//	if (i == count){
+//	if (i == period){
 //		t = -1;
 //		i = 0;
 //	}
 //	i++;
 //	
-//	Main:count = 32000 / var;
+//	Main:period = 32000 / var;
 //	
 
-/*
+*
 sawtooth working, needs to be doubled for both sides
-*/
-//	count = 32000 / var;
+*
+//	period = 32000 / var;
 //	t = i;
-//	t = t / count;
-//	if (i++ > count / 2) i = -(count / 2);
+//	t = t / period;
+//	if (i++ > period / 2) i = -(period / 2);
 
-/*
+*
 working triangle, needs to be doubled...
-*/
-//count = 32000 / var;
+*
+//period = 32000 / var;
 //t = i;
-//t = 2 * (t / count);
+//t = 2 * (t / period);
 //if (up){
 //	i++;
 //}
 //else if (!up){
 //	i--;
 //}
-//if (i == (count / 4)){
+//if (i == (period / 4)){
 //	up = false;
 //}
-//if (i == -(count / 4)){
+//if (i == -(period / 4)){
 //	up = true;
 //}
 	// audio out
 	
 //TEST:
-	/***********************************************************************************************************************************************
+	***********************************************************************************************************************************************
 	(1)
 	float right_float = 0;
 	float left_float = 0;
@@ -96,11 +96,11 @@ working triangle, needs to be doubled...
 	GUI slider:
 		FM4_GUI.P_vals[0]
 		
-************************************************************************************************************************************************/
+************************************************************************************************************************************************
 	
-/*
+
 working
-*/
+*
 
 //int16_t oszi1 = 0;
 //int16_t oszi2 = 0;
@@ -118,15 +118,16 @@ working
 //	
 //	audio_OUT = (oszi1_OUT + oszi2_OUT);		//audio_OUT erwartet 32bit!!
 //	if (i++ == 32000)i=0;
-	
+
+*/	
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = sine(freq2, 1, 0);
+	oszi1 = sawtooth(freq1, 2, 0);
 	//oszi1 = 0x00000000;
-	oszi2 = triangle(freq2, 1, 0);
+	oszi2 = sawtooth(freq1, 2, 0);
 	
-	audio_OUT = mix(oszi1, oszi2, 10, 10);			//¡audio_OUT expecting 32BIT!
+	audio_OUT = mix(oszi1, oszi2, 1, 1);			//¡audio_OUT expecting 32BIT!
 	i2s_tx(audio_OUT);
 }
 
@@ -146,10 +147,11 @@ int main(void)
 }
 
 // prototypes
-int sawtooth(int freq, int oct,  bool upshift){
-	static int16_t i = 0;		//needs to be static, to be countetd each time function is called
-	int16_t count = 32000 / freq;			//count is the itervalltime
-	int16_t out;										//out is the funktions feedback
+int sawtooth(int freq, int oct, bool upshift){
+	static int16_t i = 0;		//needs to be static, to be counted each time function is called
+	int16_t period = 32000 / freq;			//period is the itervalltime
+	int16_t out;	//out is the funktions feedback
+	int16_t test;
 	float t;
 	float x;
 	if (upshift){
@@ -159,9 +161,11 @@ int sawtooth(int freq, int oct,  bool upshift){
 		x = (1<<oct);
 		x = 1 / x;
 	}
-	t = x * i;
-	t = t / count;				//t = i normalized to 1
-	if (i > count / (2 * x)) i = -(count / (2 * x));		//i rises to (count/2) and will be resetet to -(count/2)
+	test = period / (2 * x);
+	
+	t = x * 2 * i;
+	t = t / period;				//t = i normalized to 1
+	if (i > test) i = -(test);		//i rises to (period/2) and will be resetet to -(period/2)
 	i++;
 	out = t * 8000;
 	return out;
@@ -169,8 +173,10 @@ int sawtooth(int freq, int oct,  bool upshift){
 
 int square(int freq, int oct, bool upshift){
 	static int16_t i = 0;
-	int16_t count = 32000 / freq;
+	int16_t period = 32000 / freq;
 	int16_t out;
+	int16_t test;
+	int16_t test1;
 	float t;
 	float x;
 	if (upshift){
@@ -180,10 +186,13 @@ int square(int freq, int oct, bool upshift){
 		x = (1<<oct);
 		x = 1 / x;
 	}
-	if (i == count / (2 * x)){		//t = 1 for count/2<i<count
+	test = (period / (2 * x));
+	test1 = (period / x);
+	
+	if (i == test){		//t = 1 for period/2<i<period
 		t = 1;
 	}
-	if (i == count / x){				//t = -1 for 0<i<count/2 ; i reset to 0
+	if (i == test1){				//t = -1 for 0<i<period/2 ; i reset to 0
 		t = -1;
 		i = 0;
 	}
@@ -191,14 +200,14 @@ int square(int freq, int oct, bool upshift){
 	out = t * 8000;
 	return out;
 }
-
-
 int triangle(int freq, int oct, bool upshift){
 	static int16_t i = 0;
-	int16_t count = 32000 / freq;
+	int16_t period = 32000 / freq;
 	static bool up = true;
-	int16_t out;
+	int16_t out = 0;
 	float t;
+	int16_t test;
+	
 	float x;
 	if (upshift){
 		x = (1<<oct);
@@ -207,19 +216,19 @@ int triangle(int freq, int oct, bool upshift){
 		x = (1<<oct);
 		x = 1 / x;
 	}
-	
 	t = i;
-	t = 4 * (t / count);		//t is max (count / 4) so * 4 is needed vor normalisation to 1
+	t = x * 4 * (t / period);		//t is max (period / 4) so * 4 is needed vor normalisation to 1
 	if (up){
 		i++;
 	}
 	else if (!up){
 		i--;
 	}
-	if (i == (count / (4 * x))){		//(count / 4) because the triangular wave consists of four quarter waves. The distance between (count / 4) and -(count / 4) is (count / 2) and is doubled, because the wave takes the way back, too.
+	test = (period / (x * 4));
+	if (i == test){		//(period / 4) because the triangular wave consists of four quarter waves. The distance between (period / 4) and -(period / 4) is (period / 2) and is doubled, because the wave takes the way back, too.
 		up = false;
 	}
-	if (i == -(count / (4 * x))){
+	if (i == -test){
 		up = true;
 	}
 	out = t * 8000;
@@ -244,7 +253,10 @@ int sine(int freq, int oct, bool upshift){		//oct soll octave shifting brigen, d
 	t = t / 32000;
 	s = sin(2*PI*x*freq*t);
 	out = s * 16000;
-	if (i++ == 32000) i = 0;
+	i++;
+	if (i == 32000){
+		i = 0;
+	}
 	return out;
 }
 
