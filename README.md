@@ -8,4 +8,5 @@ Goal is to develop a working digital synthesizer on the Cypress FM4 Controllerbo
 Download the repository into one directory and open this as projekt in order to compile the Projekt and flash on the FM4 Board.
 
 
-([Digital Filter](https://www.hs-schmalkalden.de/fileadmin/portal/Dokumente/Fakult%C3%A4t_ET/Personal/Roppel/Buch/Realisierung_Digitaler_Filter_in_C.pdf))
+([Digital Filter](https://www.hs-schmalkalden.de/fileadmin/portal/Dokumente/Fakult%C3%A4t_ET/Personal/Roppel/Buch/Realisierung_Digitaler_Filter_in_C.pdf)) ([for embedded Systems](https://atwillys.de/content/cc/digital-filters-in-c/))
+
