@@ -854,13 +854,14 @@ ARM Macro Assembler    Page 14
               00000000 
               00000200 
               00000000 
-Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
-erwork --depend=.\objects\startup_s6e2cc.d -o.\objects\startup_s6e2cc.o -I.\RTE
-\Device\S6E2CCAJ0A -I.\RTE\_S6E2CC -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.6.0\CMSIS\
-Core\Include -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.6.0\CMSIS\DSP\Include -IC:\Keil_
-v5\ARM\PACK\Keil\FM4_DFP\1.5.1\Device\S6E2CC\Include --predefine="__UVISION_VER
-SION SETA 526" --predefine="_RTE_ SETA 1" --predefine="S6E2CCAJ0A SETA 1" --lis
-t=.\listings\startup_s6e2cc.lst RTE\Device\S6E2CCAJ0A\startup_s6e2cc.s
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp.sp --apcs=
+interwork --depend=.\objects\startup_s6e2cc.d -o.\objects\startup_s6e2cc.o -I.\
+RTE\Device\S6E2CCAJ0A -I.\RTE\_S6E2CC -IC:\Users\Jack\AppData\Local\Arm\Packs\A
+RM\CMSIS\5.6.0\CMSIS\Core\Include -IC:\Users\Jack\AppData\Local\Arm\Packs\ARM\C
+MSIS\5.6.0\CMSIS\DSP\Include -IC:\Users\Jack\AppData\Local\Arm\Packs\Keil\FM4_D
+FP\1.6.0\Device\S6E2CC\Include --predefine="__UVISION_VERSION SETA 529" --prede
+fine="_RTE_ SETA 1" --predefine="S6E2CCAJ0A SETA 1" --list=.\listings\startup_s
+6e2cc.lst RTE\Device\S6E2CCAJ0A\startup_s6e2cc.s
 
 
 

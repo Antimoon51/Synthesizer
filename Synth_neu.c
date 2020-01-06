@@ -8,8 +8,16 @@
 
 
 
-uint16_t freq1 = 75;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<freq<16000 annehmen
-uint16_t freq2 = 99;
+uint16_t freq1 = 110;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<freq<16000 annehmen
+uint16_t freq2 = 220;
+
+float b0 = 0;
+float b1 = 0;
+float b2 = 0;
+float a1 = 0;
+float a2 = 0;
+float k = 0;
+int fc = 1000;
 
 //int16_t period;
 
@@ -22,7 +30,10 @@ int triangle(int freq, int oct, bool upshift);
 int sine(int freq, int oct, bool upshift);
 int mix(int in1, int in2, int lvl1, int lvl2);
 	
-	
+//float filt(int in, float b0, float b1, float b2, float a0, float a2);
+
+float filt(int in);
+
 // create GUI slider instance data structure
 struct FM4_slider_struct FM4_GUI;
 
@@ -123,11 +134,14 @@ working
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = sawtooth(freq1, 2, 0);
+	oszi1 = square(freq2, 2, 1);
 	//oszi1 = 0x00000000;
-	oszi2 = sawtooth(freq1, 2, 0);
+	oszi2 = square(freq2, 2, 1);
+	oszi1 = filt(oszi1);
+	oszi2 = filt(oszi2);
 	
 	audio_OUT = mix(oszi1, oszi2, 1, 1);			//¡audio_OUT expecting 32BIT!
+	//audio_OUT = oszi2 & 0x0000ffff;
 	i2s_tx(audio_OUT);
 }
 
@@ -137,6 +151,13 @@ int main(void)
   // and initial float values for each of the 6 slider parameter
   init_slider_interface(&FM4_GUI, 460800, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   
+	k = tan(PI*fc/32000);
+	b0 = (k * k) / (1 + sqrt(2) * k + (k * k));
+	b1 = (2 * (k * k)) / (1 + sqrt(2) * k + (k * k));
+	b2 = (k * k) / (1 + sqrt(2) * k + (k * k));
+	a1 = (2 * ((k * k) - 1)) / (1 + sqrt(2) * k + (k* k));
+	a2 = (1 - sqrt(2) * k + (k * k)) / (1 + sqrt(2) * k + (k * k));
+	
 	audio_init(hz32000, line_in, intr, I2S_HANDLER);
   
 	
@@ -269,5 +290,61 @@ int mix(int in1, int in2, int lvl1, int lvl2){		//in = input signals; lvl is a f
 	array1 = (((in1 / lvl1) << 16) & 0xffff0000) + ((in1 / lvl1) & 0x0000ffff);
 	array2 = (((in2 / lvl2) << 16) & 0xffff0000) + ((in2 / lvl2) & 0x0000ffff);
 	out = array1 + array2;
+	return out;
+}
+
+/*
+float filt (int in, float b0, float b1, float b2, float a1, float a2){
+	static int16_t delay_array[5];
+	static float coeff[5];
+	coeff[0] = b0;
+	coeff[1] = b1;
+	coeff[2] = b2;
+	coeff[3] = a1;
+	coeff[4] = a2;
+
+	float out = 0;
+
+	for (int i = 0; i < 5; i++){
+		out = out + coeff[i] * delay_array[i];
+	}
+	
+	delay_array[4] = delay_array[3];
+	delay_array[3] = out;
+	delay_array[2] = delay_array[1];
+	delay_array[1] = delay_array[0];
+	delay_array[0] = in;
+	
+	return out;
+	
+}
+*/
+
+float filt(int in){
+	float out = 0;
+	static float h[13];
+	h[0] = 0.03286106;
+	h[1] = 0.05152205;
+	h[2] = 0.06970883;
+	h[3] = 0.08587008;
+	h[4] = 0.09858317;
+	h[5] = 0.10670565;
+	h[6] = 0.10949837;
+	h[7] = 0.10670565;
+	h[8] = 0.09858317;
+	h[9] = 0.08587008;
+	h[10] = 0.06970883;
+	h[11] = 0.05152205;
+	h[12] = 0.03286106;
+	
+	static float array_in[13];
+	for(int i = 0; i < 13; i++){
+		array_in[i+1] = array_in[i];
+	}
+	array_in[0] = in;
+	
+	for(int i = 0; i < 13; i++){
+		out = out + h[i] * array_in[i];
+	}
 	return out;
 }
