@@ -11,6 +11,9 @@
 uint16_t freq1 = 110;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<freq<16000 annehmen
 uint16_t freq2 = 220;
 
+static int16_t i1 = 0;
+static int16_t i2 = 0;
+
 float b0 = 0;
 float b1 = 0;
 float b2 = 0;
@@ -24,10 +27,10 @@ int fc = 1000;
 //int16_t i = 0;
 
 // functions:
-int sawtooth(int freq, int oct, bool upshift);
-int square(int freq, int oct, bool upshift);
-int triangle(int freq, int oct, bool upshift);
-int sine(int freq, int oct, bool upshift);
+int sawtooth(int freq, int oct, bool upshift, bool oszi);
+int square(int freq, int oct, bool upshift, bool oszi);
+int triangle(int freq, int oct, bool upshift, bool oszi);
+int sine(int freq, int oct, bool upshift, bool oszi);
 int mix(int in1, int in2, int lvl1, int lvl2);
 	
 //float filt(int in, float b0, float b1, float b2, float a0, float a2);
@@ -39,6 +42,7 @@ struct FM4_slider_struct FM4_GUI;
 
 /** I2C Interrupt handler **/
 void I2S_HANDLER(void) {
+
 	
 
 	// audio in
@@ -134,15 +138,16 @@ working
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = square(freq2, 2, 1);
+	oszi1 = triangle(freq2, 2, 1, 0);
 	//oszi1 = 0x00000000;
-	oszi2 = square(freq2, 2, 1);
-	oszi1 = filt(oszi1);
+	oszi2 = triangle(freq2, 2, 1, 1);
+ 	oszi1 = filt(oszi1);
 	oszi2 = filt(oszi2);
 	
 	audio_OUT = mix(oszi1, oszi2, 1, 1);			//¡audio_OUT expecting 32BIT!
 	//audio_OUT = oszi2 & 0x0000ffff;
 	i2s_tx(audio_OUT);
+
 }
 
 int main(void)
@@ -168,8 +173,14 @@ int main(void)
 }
 
 // prototypes
-int sawtooth(int freq, int oct, bool upshift){
-	static int16_t i = 0;		//needs to be static, to be counted each time function is called
+int sawtooth(int freq, int oct, bool upshift, bool oszi){
+	static int16_t i;	//needs to be static, to be counted each time function is called
+	if (!oszi){
+		i = i1;
+	}
+	else if (oszi){
+		i = i2;
+	}
 	int16_t period = 32000 / freq;			//period is the itervalltime
 	int16_t out;	//out is the funktions feedback
 	int16_t test;
@@ -189,11 +200,24 @@ int sawtooth(int freq, int oct, bool upshift){
 	if (i > test) i = -(test);		//i rises to (period/2) and will be resetet to -(period/2)
 	i++;
 	out = t * 8000;
+	
+	if (!oszi){
+		i1 = i;
+	}
+	else if (oszi){
+		i2 = i;
+	}
 	return out;
 }
 
-int square(int freq, int oct, bool upshift){
-	static int16_t i = 0;
+int square(int freq, int oct, bool upshift, bool oszi){
+	static int16_t i;
+	if (!oszi){
+		i = i1;
+	}
+	else if (oszi){
+		i = i2;
+	}
 	int16_t period = 32000 / freq;
 	int16_t out;
 	int16_t test;
@@ -219,12 +243,26 @@ int square(int freq, int oct, bool upshift){
 	}
 	i++;
 	out = t * 8000;
+	
+	if (!oszi){
+		i1 = i;
+	}
+	else if (oszi){
+		i2 = i;
+	}
 	return out;
 }
-int triangle(int freq, int oct, bool upshift){
-	static int16_t i = 0;
+int triangle(int freq, int oct, bool upshift, bool oszi){
+	static int16_t i;
+	if (!oszi){
+		i = i1;
+	}
+	else if (oszi){
+		i = i2;
+	}
 	int16_t period = 32000 / freq;
-	static bool up = true;
+	static bool up1 = true;
+	static bool up2 = true;
 	int16_t out = 0;
 	float t;
 	int16_t test;
@@ -239,26 +277,59 @@ int triangle(int freq, int oct, bool upshift){
 	}
 	t = i;
 	t = x * 4 * (t / period);		//t is max (period / 4) so * 4 is needed vor normalisation to 1
-	if (up){
-		i++;
-	}
-	else if (!up){
-		i--;
-	}
 	test = (period / (x * 4));
-	if (i == test){		//(period / 4) because the triangular wave consists of four quarter waves. The distance between (period / 4) and -(period / 4) is (period / 2) and is doubled, because the wave takes the way back, too.
-		up = false;
+	if (!oszi){
+		if (up1){
+			i++;
+		}
+		else if (!up1){
+			i--;
+		}
+		if (i == test){		//(period / 4) because the triangular wave consists of four quarter waves. The distance between (period / 4) and -(period / 4) is (period / 2) and is doubled, because the wave takes the way back, too.
+			up1 = false;
+		}
+		if (i == -test){
+			up1 = true;
+		}
 	}
-	if (i == -test){
-		up = true;
+	
+	if (oszi){
+		if (up2){
+			i++;
+		}
+		else if (!up2){
+			i--;
+		}
+		if (i == test){		//(period / 4) because the triangular wave consists of four quarter waves. The distance between (period / 4) and -(period / 4) is (period / 2) and is doubled, because the wave takes the way back, too.
+			up2 = false;
+		}
+		if (i == -test){
+			up2 = true;
+		}
 	}
+	
+	
+	
 	out = t * 8000;
+	
+	if (!oszi){
+		i1 = i;
+	}
+	else if (oszi){
+		i2 = i;
+	}
 	return out;
 }
 
 
-int sine(int freq, int oct, bool upshift){		//oct soll octave shifting brigen, dafür muss oct werte von 1,2,4,8,16 oder 1/2,1/4,1/8,1/16 annehmen
-	static int16_t i = 0;
+int sine(int freq, int oct, bool upshift, bool oszi){		//oct soll octave shifting brigen, dafür muss oct werte von 1,2,4,8,16 oder 1/2,1/4,1/8,1/16 annehmen
+	static int16_t i;
+	if (!oszi){
+		i = i1;
+	}
+	else if (oszi){
+		i = i2;
+	}
 	float s;
 	int16_t out;
 	float t;
@@ -277,6 +348,13 @@ int sine(int freq, int oct, bool upshift){		//oct soll octave shifting brigen, d
 	i++;
 	if (i == 32000){
 		i = 0;
+	}
+	
+	if (!oszi){
+		i1 = i;
+	}
+	else if (oszi){
+		i2 = i;
 	}
 	return out;
 }
