@@ -16,7 +16,7 @@
         <TargetCommonOption>
           <Device>S6E2CCAJ0A</Device>
           <Vendor>Cypress</Vendor>
-          <PackID>Keil.FM4_DFP.1.5.1</PackID>
+          <PackID>Keil.FM4_DFP.1.6.0</PackID>
           <PackURL>http://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x1FFD0000,0x30000) IRAM2(0x20038000,0x10000) IROM(0x00000000,0x200000) IROM2(0x00406000,0xA000) CPUTYPE("Cortex-M4") FPU2 CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
@@ -480,7 +480,7 @@
       <file attr="config" category="source" condition="Compiler ARMCC" name="Device\S6E2CC\Source\ARM\startup_s6e2cc.s" version="1.0.0">
         <instance index="0">RTE\Device\S6E2CCAJ0A\startup_s6e2cc.s</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="S6E2CC CMSIS"/>
-        <package name="FM4_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.5.1"/>
+        <package name="FM4_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.6.0"/>
         <targetInfos>
           <targetInfo name="S6E2CC"/>
         </targetInfos>
@@ -488,7 +488,7 @@
       <file attr="config" category="source" name="Device\S6E2CC\Source\system_s6e2cc.c" version="1.0.0">
         <instance index="0">RTE\Device\S6E2CCAJ0A\system_s6e2cc.c</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="S6E2CC CMSIS"/>
-        <package name="FM4_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.5.1"/>
+        <package name="FM4_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.6.0"/>
         <targetInfos>
           <targetInfo name="S6E2CC"/>
         </targetInfos>
@@ -496,7 +496,7 @@
       <file attr="config" category="header" name="Device\S6E2CC\Source\system_s6e2cc.h" version="1.0.0">
         <instance index="0">RTE\Device\S6E2CCAJ0A\system_s6e2cc.h</instance>
         <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="S6E2CC CMSIS"/>
-        <package name="FM4_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.5.1"/>
+        <package name="FM4_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="1.6.0"/>
         <targetInfos>
           <targetInfo name="S6E2CC"/>
         </targetInfos>

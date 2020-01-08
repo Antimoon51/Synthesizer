@@ -8,74 +8,89 @@
 
 
 
-uint16_t freq1 = 55;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<var<16000 annehmen
-uint16_t freq2 = 110;
+uint16_t freq1 = 110;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<freq<16000 annehmen
+uint16_t freq2 = 220;
 
-//int16_t count;
+static int16_t i1 = 0;
+static int16_t i2 = 0;
+
+float b0 = 0;
+float b1 = 0;
+float b2 = 0;
+float a1 = 0;
+float a2 = 0;
+float k = 0;
+int fc = 1000;
+
+//int16_t period;
 
 //int16_t i = 0;
 
 // functions:
-int triangle(int freq, int oct);
-int sine(int freq, int oct, bool upshift);
-int sawtooth(int freq, int oct);
-int square(int freq, int oct);
+int sawtooth(int freq, int oct, bool upshift, bool oszi);
+int square(int freq, int oct, bool upshift, bool oszi);
+int triangle(int freq, int oct, bool upshift, bool oszi);
+int sine(int freq, int oct, bool upshift, bool oszi);
 int mix(int in1, int in2, int lvl1, int lvl2);
 	
-	
+//float filt(int in, float b0, float b1, float b2, float a0, float a2);
+
+float filt(int in);
+
 // create GUI slider instance data structure
 struct FM4_slider_struct FM4_GUI;
 
 /** I2C Interrupt handler **/
 void I2S_HANDLER(void) {
+
 	
 
 	// audio in
 	/*
 	Square workig, one side (needs to be doubled, audio_OUT expected 32Bit)
-	*/
-//	if (i == count / 2){
+	*
+//	if (i == period / 2){
 //		t = 1;
 //	}
-//	if (i == count){
+//	if (i == period){
 //		t = -1;
 //		i = 0;
 //	}
 //	i++;
 //	
-//	Main:count = 32000 / var;
+//	Main:period = 32000 / var;
 //	
 
-/*
+*
 sawtooth working, needs to be doubled for both sides
-*/
-//	count = 32000 / var;
+*
+//	period = 32000 / var;
 //	t = i;
-//	t = t / count;
-//	if (i++ > count / 2) i = -(count / 2);
+//	t = t / period;
+//	if (i++ > period / 2) i = -(period / 2);
 
-/*
+*
 working triangle, needs to be doubled...
-*/
-//count = 32000 / var;
+*
+//period = 32000 / var;
 //t = i;
-//t = 2 * (t / count);
+//t = 2 * (t / period);
 //if (up){
 //	i++;
 //}
 //else if (!up){
 //	i--;
 //}
-//if (i == (count / 4)){
+//if (i == (period / 4)){
 //	up = false;
 //}
-//if (i == -(count / 4)){
+//if (i == -(period / 4)){
 //	up = true;
 //}
 	// audio out
 	
 //TEST:
-	/***********************************************************************************************************************************************
+	***********************************************************************************************************************************************
 	(1)
 	float right_float = 0;
 	float left_float = 0;
@@ -96,11 +111,11 @@ working triangle, needs to be doubled...
 	GUI slider:
 		FM4_GUI.P_vals[0]
 		
-************************************************************************************************************************************************/
+************************************************************************************************************************************************
 	
-/*
+
 working
-*/
+*
 
 //int16_t oszi1 = 0;
 //int16_t oszi2 = 0;
@@ -118,16 +133,21 @@ working
 //	
 //	audio_OUT = (oszi1_OUT + oszi2_OUT);		//audio_OUT erwartet 32bit!!
 //	if (i++ == 32000)i=0;
-	
+
+*/	
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = sine(freq2, 2, 0);
+	oszi1 = triangle(freq2, 2, 1, 0);
 	//oszi1 = 0x00000000;
-	oszi2 = sine(freq2, 2, 0);
+	oszi2 = triangle(freq2, 2, 1, 1);
+ 	oszi1 = filt(oszi1);
+	oszi2 = filt(oszi2);
 	
-	audio_OUT = mix(oszi1, oszi2, 10, 10);			//¡audio_OUT expecting 32BIT!
+	audio_OUT = mix(oszi1, oszi2, 1, 1);			//¡audio_OUT expecting 32BIT!
+	//audio_OUT = oszi2 & 0x0000ffff;
 	i2s_tx(audio_OUT);
+
 }
 
 int main(void)
@@ -136,6 +156,13 @@ int main(void)
   // and initial float values for each of the 6 slider parameter
   init_slider_interface(&FM4_GUI, 460800, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   
+	k = tan(PI*fc/32000);
+	b0 = (k * k) / (1 + sqrt(2) * k + (k * k));
+	b1 = (2 * (k * k)) / (1 + sqrt(2) * k + (k * k));
+	b2 = (k * k) / (1 + sqrt(2) * k + (k * k));
+	a1 = (2 * ((k * k) - 1)) / (1 + sqrt(2) * k + (k* k));
+	a2 = (1 - sqrt(2) * k + (k * k)) / (1 + sqrt(2) * k + (k * k));
+	
 	audio_init(hz32000, line_in, intr, I2S_HANDLER);
   
 	
@@ -146,62 +173,163 @@ int main(void)
 }
 
 // prototypes
-int sawtooth(int freq, int oct){
-	static int16_t i = 0;		//needs to be static, to be countetd each time function is called
-	int16_t count = 32000 / freq;			//count is the itervalltime
-	int16_t out;										//out is the funktions feedback
+int sawtooth(int freq, int oct, bool upshift, bool oszi){
+	static int16_t i;	//needs to be static, to be counted each time function is called
+	if (!oszi){
+		i = i1;
+	}
+	else if (oszi){
+		i = i2;
+	}
+	int16_t period = 32000 / freq;			//period is the itervalltime
+	int16_t out;	//out is the funktions feedback
+	int16_t test;
 	float t;
-	t = 2 * i;
-	t = t / count;				//t = i normalized to 1
-	if (i > count / 2) i = -(count / 2);		//i rises to (count/2) and will be resetet to -(count/2)
+	float x;
+	if (upshift){
+		x = (1<<oct);
+	}
+	else if (!upshift){
+		x = (1<<oct);
+		x = 1 / x;
+	}
+	test = period / (2 * x);
+	
+	t = x * 2 * i;
+	t = t / period;				//t = i normalized to 1
+	if (i > test) i = -(test);		//i rises to (period/2) and will be resetet to -(period/2)
 	i++;
 	out = t * 8000;
+	
+	if (!oszi){
+		i1 = i;
+	}
+	else if (oszi){
+		i2 = i;
+	}
 	return out;
 }
 
-int square(int freq, int oct){
-	static int16_t i = 0;
-	int16_t count = 32000 / freq;
+int square(int freq, int oct, bool upshift, bool oszi){
+	static int16_t i;
+	if (!oszi){
+		i = i1;
+	}
+	else if (oszi){
+		i = i2;
+	}
+	int16_t period = 32000 / freq;
 	int16_t out;
+	int16_t test;
+	int16_t test1;
 	float t;
-	if (i == count / 2){		//t = 1 for count/2<i<count
+	float x;
+	if (upshift){
+		x = (1<<oct);
+	}
+	else if (!upshift){
+		x = (1<<oct);
+		x = 1 / x;
+	}
+	test = (period / (2 * x));
+	test1 = (period / x);
+	
+	if (i == test){		//t = 1 for period/2<i<period
 		t = 1;
 	}
-	if (i == count){				//t = -1 for 0<i<count/2 ; i reset to 0
+	if (i == test1){				//t = -1 for 0<i<period/2 ; i reset to 0
 		t = -1;
 		i = 0;
 	}
 	i++;
 	out = t * 8000;
+	
+	if (!oszi){
+		i1 = i;
+	}
+	else if (oszi){
+		i2 = i;
+	}
 	return out;
 }
-int triangle(int freq, int oct){
-	static int16_t i = 0;
-	int16_t count = 32000 / freq;
-	static bool up = true;
-	int16_t out;
+int triangle(int freq, int oct, bool upshift, bool oszi){
+	static int16_t i;
+	if (!oszi){
+		i = i1;
+	}
+	else if (oszi){
+		i = i2;
+	}
+	int16_t period = 32000 / freq;
+	static bool up1 = true;
+	static bool up2 = true;
+	int16_t out = 0;
 	float t;
+	int16_t test;
+	
+	float x;
+	if (upshift){
+		x = (1<<oct);
+	}
+	else if (!upshift){
+		x = (1<<oct);
+		x = 1 / x;
+	}
 	t = i;
-	t = 4 * (t / count);		//t is max (count / 4) so * 4 is needed vor normalisation to 1
-	if (up){
-		i++;
+	t = x * 4 * (t / period);		//t is max (period / 4) so * 4 is needed vor normalisation to 1
+	test = (period / (x * 4));
+	if (!oszi){
+		if (up1){
+			i++;
+		}
+		else if (!up1){
+			i--;
+		}
+		if (i == test){		//(period / 4) because the triangular wave consists of four quarter waves. The distance between (period / 4) and -(period / 4) is (period / 2) and is doubled, because the wave takes the way back, too.
+			up1 = false;
+		}
+		if (i == -test){
+			up1 = true;
+		}
 	}
-	else if (!up){
-		i--;
+	
+	if (oszi){
+		if (up2){
+			i++;
+		}
+		else if (!up2){
+			i--;
+		}
+		if (i == test){		//(period / 4) because the triangular wave consists of four quarter waves. The distance between (period / 4) and -(period / 4) is (period / 2) and is doubled, because the wave takes the way back, too.
+			up2 = false;
+		}
+		if (i == -test){
+			up2 = true;
+		}
 	}
-	if (i == (count / 4)){		//(count / 4) because the triangular wave consists of four quarter waves. The distance between (count / 4) and -(count / 4) is (count / 2) and is doubled, because the wave takes the way back, too.
-		up = false;
-	}
-	if (i == -(count / 4)){
-		up = true;
-	}
+	
+	
+	
 	out = t * 8000;
+	
+	if (!oszi){
+		i1 = i;
+	}
+	else if (oszi){
+		i2 = i;
+	}
 	return out;
 }
 
 
-int sine(int freq, int oct, bool upshift){		//oct soll octave shifting brigen, dafür muss oct werte von 1,2,4,8,16 oder 1/2,1/4,1/8,1/16 annehmen
-	static int16_t i = 0;
+int sine(int freq, int oct, bool upshift, bool oszi){		//oct soll octave shifting brigen, dafür muss oct werte von 1,2,4,8,16 oder 1/2,1/4,1/8,1/16 annehmen
+	static int16_t i;
+	if (!oszi){
+		i = i1;
+	}
+	else if (oszi){
+		i = i2;
+	}
 	float s;
 	int16_t out;
 	float t;
@@ -217,7 +345,17 @@ int sine(int freq, int oct, bool upshift){		//oct soll octave shifting brigen, d
 	t = t / 32000;
 	s = sin(2*PI*x*freq*t);
 	out = s * 16000;
-	if (i++ == 32000) i = 0;
+	i++;
+	if (i == 32000){
+		i = 0;
+	}
+	
+	if (!oszi){
+		i1 = i;
+	}
+	else if (oszi){
+		i2 = i;
+	}
 	return out;
 }
 
@@ -230,5 +368,61 @@ int mix(int in1, int in2, int lvl1, int lvl2){		//in = input signals; lvl is a f
 	array1 = (((in1 / lvl1) << 16) & 0xffff0000) + ((in1 / lvl1) & 0x0000ffff);
 	array2 = (((in2 / lvl2) << 16) & 0xffff0000) + ((in2 / lvl2) & 0x0000ffff);
 	out = array1 + array2;
+	return out;
+}
+
+/*
+float filt (int in, float b0, float b1, float b2, float a1, float a2){
+	static int16_t delay_array[5];
+	static float coeff[5];
+	coeff[0] = b0;
+	coeff[1] = b1;
+	coeff[2] = b2;
+	coeff[3] = a1;
+	coeff[4] = a2;
+
+	float out = 0;
+
+	for (int i = 0; i < 5; i++){
+		out = out + coeff[i] * delay_array[i];
+	}
+	
+	delay_array[4] = delay_array[3];
+	delay_array[3] = out;
+	delay_array[2] = delay_array[1];
+	delay_array[1] = delay_array[0];
+	delay_array[0] = in;
+	
+	return out;
+	
+}
+*/
+
+float filt(int in){
+	float out = 0;
+	static float h[13];
+	h[0] = 0.03286106;
+	h[1] = 0.05152205;
+	h[2] = 0.06970883;
+	h[3] = 0.08587008;
+	h[4] = 0.09858317;
+	h[5] = 0.10670565;
+	h[6] = 0.10949837;
+	h[7] = 0.10670565;
+	h[8] = 0.09858317;
+	h[9] = 0.08587008;
+	h[10] = 0.06970883;
+	h[11] = 0.05152205;
+	h[12] = 0.03286106;
+	
+	static float array_in[13];
+	for(int i = 0; i < 13; i++){
+		array_in[i+1] = array_in[i];
+	}
+	array_in[0] = in;
+	
+	for(int i = 0; i < 13; i++){
+		out = out + h[i] * array_in[i];
+	}
 	return out;
 }
