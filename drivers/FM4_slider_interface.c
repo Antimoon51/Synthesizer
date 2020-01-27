@@ -68,7 +68,7 @@ static uint8_t au8UartRxBuf[SAMPLE_UART_RX_BUFFSIZE];
 void init_slider_interface(struct FM4_slider_struct *FM4_slider,
 	                            uint32_t baud_rate,
                               float32_t P_val0, float32_t P_val1, float32_t P_val2,
-                              float32_t P_val3, float32_t P_val4, float32_t P_val5)
+                              float32_t P_val3, float32_t P_val4, float32_t P_val5, float32_t P_val6, float32_t P_val7, float32_t P_val8)
 {
 	//Variables for parameter slider communication
 	FM4_slider->P_vals[0] = P_val0;
@@ -77,6 +77,9 @@ void init_slider_interface(struct FM4_slider_struct *FM4_slider,
 	FM4_slider->P_vals[3] = P_val3;
 	FM4_slider->P_vals[4] = P_val4;
 	FM4_slider->P_vals[5] = P_val5;
+	FM4_slider->P_vals[5] = P_val6;
+	FM4_slider->P_vals[5] = P_val7;
+	FM4_slider->P_vals[5] = P_val8;
 	FM4_slider->H_found = 0;
 	// Baud rate : 115200 bps (230400, 460800, 921600)
 	FM4_slider->stcMfsHlUartCfg.u32DataRate = baud_rate; 

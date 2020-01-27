@@ -3,6 +3,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
+
 #include "FM4_slider_interface.h"
 #include "audio.h"
 
@@ -27,15 +29,20 @@ int fc = 1000;
 //int16_t i = 0;
 
 // functions:
-int sawtooth(int freq, int oct, bool upshift, bool oszi);
-int square(int freq, int oct, bool upshift, bool oszi);
-int triangle(int freq, int oct, bool upshift, bool oszi);
-int sine(int freq, int oct, bool upshift, bool oszi);
+int sawtooth(int freq, int oct, bool oszi);
+int square(int freq, int oct, bool oszi);
+int triangle(int freq, int oct, bool oszi);
+int sine(int freq, int oct, bool oszi);
 int mix(int in1, int in2, int lvl1, int lvl2);
+
+int pval2int(int pval);
 	
 //float filt(int in, float b0, float b1, float b2, float a0, float a2);
 
 float filt(int in);
+
+// Funktion Pointer 
+int (*funk_point_array[])(int, int ,bool) = {sine, square, triangle, sawtooth};
 
 // create GUI slider instance data structure
 struct FM4_slider_struct FM4_GUI;
@@ -138,14 +145,34 @@ working
 	
 	int16_t oszi1;
 	int16_t oszi2;
-	oszi1 = triangle(freq2, 2, 1, 0);
+	if (FM4_GUI.P_vals[0] == 0){
+		audio_OUT = 0x00000000;
+	} else if (FM4_GUI.P_vals[0] == 1){
+		oszi1 = (*funk_point_array[pval2int(FM4_GUI.P_vals[1])])(FM4_GUI.P_vals[3], FM4_GUI.P_vals[7], 0);
+		oszi2 = 0x0000;
+		audio_OUT = mix(oszi1, oszi2, FM4_GUI.P_vals[4], FM4_GUI.P_vals[6]);
+	} else if (FM4_GUI.P_vals[0] == 2){
+		oszi1 = 0x0000;
+		oszi2 = (*funk_point_array[pval2int(FM4_GUI.P_vals[2])])(FM4_GUI.P_vals[5], FM4_GUI.P_vals[8], 1);
+		audio_OUT = mix(oszi1, oszi2, FM4_GUI.P_vals[4], FM4_GUI.P_vals[6]);
+	} else if (FM4_GUI.P_vals[0] == 3){
+		oszi1 = (*funk_point_array[pval2int(FM4_GUI.P_vals[1])])(FM4_GUI.P_vals[3], FM4_GUI.P_vals[7], 0);
+		oszi2 = (*funk_point_array[pval2int(FM4_GUI.P_vals[2])])(FM4_GUI.P_vals[5], FM4_GUI.P_vals[8], 1);
+		audio_OUT = mix(oszi1, oszi2, FM4_GUI.P_vals[4], FM4_GUI.P_vals[6]);
+	}
+	
+	
+
+	/*
+	oszi1 = (*funk_point_array[pval2int(FM4_GUI.P_vals[1])])(FM4_GUI.P_vals[3], 2, 1, 0);
 	//oszi1 = 0x00000000;
-	oszi2 = triangle(freq2, 2, 1, 1);
+	oszi2 = (*funk_point_array[pval2int(FM4_GUI.P_vals[2])])(FM4_GUI.P_vals[5], 2, 1, 1);
  	oszi1 = filt(oszi1);
 	oszi2 = filt(oszi2);
 	
-	audio_OUT = mix(oszi1, oszi2, 1, 1);			//¡audio_OUT expecting 32BIT!
+	audio_OUT = mix(oszi1, oszi2, FM4_GUI.P_vals[4], FM4_GUI.P_vals[6]);			//¡audio_OUT expecting 32BIT!
 	//audio_OUT = oszi2 & 0x0000ffff;
+	*/
 	i2s_tx(audio_OUT);
 
 }
@@ -154,17 +181,20 @@ int main(void)
 {
   // initialize the slider interface by setting the baud rate (460800 or 921600)
   // and initial float values for each of the 6 slider parameter
-  init_slider_interface(&FM4_GUI, 460800, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  init_slider_interface(&FM4_GUI, 460800, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   
+	/*
 	k = tan(PI*fc/32000);
 	b0 = (k * k) / (1 + sqrt(2) * k + (k * k));
 	b1 = (2 * (k * k)) / (1 + sqrt(2) * k + (k * k));
 	b2 = (k * k) / (1 + sqrt(2) * k + (k * k));
 	a1 = (2 * ((k * k) - 1)) / (1 + sqrt(2) * k + (k* k));
 	a2 = (1 - sqrt(2) * k + (k * k)) / (1 + sqrt(2) * k + (k * k));
+	*/
 	
 	audio_init(hz32000, line_in, intr, I2S_HANDLER);
   
+	
 	
 
   while(1){
@@ -173,7 +203,7 @@ int main(void)
 }
 
 // prototypes
-int sawtooth(int freq, int oct, bool upshift, bool oszi){
+int sawtooth(int freq, int oct, bool oszi){
 	static int16_t i;	//needs to be static, to be counted each time function is called
 	if (!oszi){
 		i = i1;
@@ -185,11 +215,12 @@ int sawtooth(int freq, int oct, bool upshift, bool oszi){
 	int16_t out;	//out is the funktions feedback
 	int16_t test;
 	float t;
-	float x;
-	if (upshift){
+	float x = 0;
+	if (oct > 0){
 		x = (1<<oct);
 	}
-	else if (!upshift){
+	else if (oct < 0){
+		oct = abs(oct);
 		x = (1<<oct);
 		x = 1 / x;
 	}
@@ -210,7 +241,7 @@ int sawtooth(int freq, int oct, bool upshift, bool oszi){
 	return out;
 }
 
-int square(int freq, int oct, bool upshift, bool oszi){
+int square(int freq, int oct, bool oszi){
 	static int16_t i;
 	if (!oszi){
 		i = i1;
@@ -223,11 +254,12 @@ int square(int freq, int oct, bool upshift, bool oszi){
 	int16_t test;
 	int16_t test1;
 	float t;
-	float x;
-	if (upshift){
+	float x = 0;
+	if (oct > 0){
 		x = (1<<oct);
 	}
-	else if (!upshift){
+	else if (oct < 0){
+		oct = abs(oct);
 		x = (1<<oct);
 		x = 1 / x;
 	}
@@ -252,7 +284,7 @@ int square(int freq, int oct, bool upshift, bool oszi){
 	}
 	return out;
 }
-int triangle(int freq, int oct, bool upshift, bool oszi){
+int triangle(int freq, int oct, bool oszi){
 	static int16_t i;
 	if (!oszi){
 		i = i1;
@@ -267,11 +299,12 @@ int triangle(int freq, int oct, bool upshift, bool oszi){
 	float t;
 	int16_t test;
 	
-	float x;
-	if (upshift){
+	float x = 0;
+	if (oct > 0){
 		x = (1<<oct);
 	}
-	else if (!upshift){
+	else if (oct < 0){
+		oct = abs(oct);
 		x = (1<<oct);
 		x = 1 / x;
 	}
@@ -322,7 +355,7 @@ int triangle(int freq, int oct, bool upshift, bool oszi){
 }
 
 
-int sine(int freq, int oct, bool upshift, bool oszi){		//oct soll octave shifting brigen, dafür muss oct werte von 1,2,4,8,16 oder 1/2,1/4,1/8,1/16 annehmen
+int sine(int freq, int oct, bool oszi){		//oct soll octave shifting brigen, dafür muss oct werte von 1,2,4,8,16 oder 1/2,1/4,1/8,1/16 annehmen
 	static int16_t i;
 	if (!oszi){
 		i = i1;
@@ -333,11 +366,12 @@ int sine(int freq, int oct, bool upshift, bool oszi){		//oct soll octave shiftin
 	float s;
 	int16_t out;
 	float t;
-	float x;
-	if (upshift){
+	float x = 0;
+	if (oct > 0){
 		x = (1<<oct);
 	}
-	else if (!upshift){
+	else if (oct < 0){
+		oct = abs(oct);
 		x = (1<<oct);
 		x = 1 / x;
 	}
@@ -424,5 +458,10 @@ float filt(int in){
 	for(int i = 0; i < 13; i++){
 		out = out + h[i] * array_in[i];
 	}
+	return out;
+}
+
+int pval2int(int pval){
+	uint8_t out = pval;
 	return out;
 }

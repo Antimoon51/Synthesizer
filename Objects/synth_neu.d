@@ -2,8 +2,8 @@
 .\objects\synth_neu.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
 .\objects\synth_neu.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 .\objects\synth_neu.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
-.\objects\synth_neu.o: .\drivers\FM4_slider_interface.h
 .\objects\synth_neu.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+.\objects\synth_neu.o: .\drivers\FM4_slider_interface.h
 .\objects\synth_neu.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 .\objects\synth_neu.o: .\drivers\mfs_hl.h
 .\objects\synth_neu.o: .\drivers\mfs.h

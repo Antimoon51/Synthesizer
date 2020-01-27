@@ -148,60 +148,12 @@
           <Name>-U -O206 -S0 -C0 -P00 -TO65554 -TC10000000 -TT10000000 -TP21 -TDS8007 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO7 -FD2003C000 -FC1000 -FN4 -FF0S6E2CC_MACRO0_1024KB.FLM -FS00 -FL0100000 -FP0($$Device:S6E2CCAJ0A$Flash\S6E2CC_MACRO0_1024KB.FLM) -FF1S6E2CC_MACRO1_1024KB.FLM -FS1100000 -FL1100000 -FP1($$Device:S6E2CCAJ0A$Flash\S6E2CC_MACRO1_1024KB.FLM) -FF2S6E2CC_MACRO0_8KB.FLM -FS2406000 -FL22000 -FP2($$Device:S6E2CCAJ0A$Flash\S6E2CC_MACRO0_8KB.FLM) -FF3S6E2CC_MACRO1_32KB.FLM -FS3408000 -FL38000 -FP3($$Device:S6E2CCAJ0A$Flash\S6E2CC_MACRO1_32KB.FLM)</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint>
-        <Bp>
-          <Number>0</Number>
-          <Type>0</Type>
-          <LineNumber>141</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>6462</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\Synth_neu.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\Lab2\Synth_neu.c\141</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>143</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>6478</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\Synth_neu.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\Lab2\Synth_neu.c\143</Expression>
-        </Bp>
-      </Breakpoint>
+      <Breakpoint/>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>i1</ItemText>
-        </Ww>
-        <Ww>
-          <count>1</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>i</ItemText>
-        </Ww>
-        <Ww>
-          <count>2</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>i2</ItemText>
-        </Ww>
-        <Ww>
-          <count>3</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>test</ItemText>
+          <ItemText>FM4_GUI</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
@@ -351,7 +303,7 @@
       <GroupNumber>2</GroupNumber>
       <FileNumber>8</FileNumber>
       <FileType>1</FileType>
-      <tvExp>0</tvExp>
+      <tvExp>1</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
       <PathWithFileName>.\drivers\FM4_slider_interface.c</PathWithFileName>

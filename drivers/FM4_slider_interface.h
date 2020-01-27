@@ -72,7 +72,7 @@
 
 struct FM4_slider_struct
 {
-	float32_t P_vals[6];
+	float32_t P_vals[9];
 	char P_rcvd[10];
 	uint8_t P_idx;
 	stc_mfs_hl_uart_config_t stcMfsHlUartCfg;
@@ -85,7 +85,7 @@ struct FM4_slider_struct
 void init_slider_interface(struct FM4_slider_struct *FM4_slider,
 	                         uint32_t baud_rate,
                            float32_t P_val0, float32_t P_val1, float32_t P_val2,
-                           float32_t P_val3, float32_t P_val4, float32_t P_val5);
+                           float32_t P_val3, float32_t P_val4, float32_t P_val5, float32_t P_val6, float32_t P_val7, float32_t P_val8);
 
 void update_slider_parameters(struct FM4_slider_struct *FM4_slider);
 
