@@ -9,7 +9,7 @@
 #include "audio.h"
 
 
-
+uint16_t buffer = 32000;
 uint16_t freq1 = 110;		//darf aufgrund von Shannon nur ganzzahlige Werte von 1<freq<16000 annehmen
 uint16_t freq2 = 220;
 
@@ -65,13 +65,13 @@ void I2S_HANDLER(void) {
 //	}
 //	i++;
 //	
-//	Main:period = 32000 / var;
+//	Main:period = 8000 / var;
 //	
 
 *
 sawtooth working, needs to be doubled for both sides
 *
-//	period = 32000 / var;
+//	period = 8000 / var;
 //	t = i;
 //	t = t / period;
 //	if (i++ > period / 2) i = -(period / 2);
@@ -79,7 +79,7 @@ sawtooth working, needs to be doubled for both sides
 *
 working triangle, needs to be doubled...
 *
-//period = 32000 / var;
+//period = 8000 / var;
 //t = i;
 //t = 2 * (t / period);
 //if (up){
@@ -130,7 +130,7 @@ working
 //int32_t oszi1_OUT;
 //int32_t oszi2_OUT;
 //	t = i;
-//	t = t / 32000;
+//	t = t / 8000;
 //	
 //	oszi1 = .5 * sin(2*PI*55*t) * 16000;			//2 Frequenzen werden generiert und faktorisiert mit werten 0<x<0,5 (GUI_slider!! mixer)
 //	oszi2 = .5 * sin(2*PI*110*t) * 16000;			//16 BIT!!!
@@ -139,12 +139,13 @@ working
 //	oszi2_OUT = ((oszi2 << 16) & 0xffff0000) + (oszi2 & 0x0000ffff);			//in audio_OUT werden beide arrays zusammen addiert -> Ausgabe zweier überlagerter Frequenzen 
 //	
 //	audio_OUT = (oszi1_OUT + oszi2_OUT);		//audio_OUT erwartet 32bit!!
-//	if (i++ == 32000)i=0;
+//	if (i++ == 8000)i=0;
 
 */	
 	
 	int16_t oszi1;
 	int16_t oszi2;
+	
 	if (FM4_GUI.P_vals[0] == 0){
 		audio_OUT = 0x00000000;
 	} else if (FM4_GUI.P_vals[0] == 1){
@@ -173,6 +174,11 @@ working
 	audio_OUT = mix(oszi1, oszi2, FM4_GUI.P_vals[4], FM4_GUI.P_vals[6]);			//¡audio_OUT expecting 32BIT!
 	//audio_OUT = oszi2 & 0x0000ffff;
 	*/
+	/*
+	oszi1 = sine(FM4_GUI.P_vals[3], 0 ,0);
+	audio_OUT = ((oszi1 << 16) & 0xffff0000) + (oszi1 & 0x0000ffff);
+	*/
+	
 	i2s_tx(audio_OUT);
 
 }
@@ -181,14 +187,15 @@ int main(void)
 {
   // initialize the slider interface by setting the baud rate (460800 or 921600)
   // and initial float values for each of the 6 slider parameter
-  init_slider_interface(&FM4_GUI, 460800, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  init_slider_interface(&FM4_GUI, 921600, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   
 	/*
-	k = tan(PI*fc/32000);
+	k = tan(PI*fc/8000);
 	b0 = (k * k) / (1 + sqrt(2) * k + (k * k));
 	b1 = (2 * (k * k)) / (1 + sqrt(2) * k + (k * k));
 	b2 = (k * k) / (1 + sqrt(2) * k + (k * k));
-	a1 = (2 * ((k * k) - 1)) / (1 + sqrt(2) * k + (k* k));
+	a1 = (2 * ((k * k) - 
+	1)) / (1 + sqrt(2) * k + (k* k));
 	a2 = (1 - sqrt(2) * k + (k * k)) / (1 + sqrt(2) * k + (k * k));
 	*/
 	
@@ -211,7 +218,7 @@ int sawtooth(int freq, int oct, bool oszi){
 	else if (oszi){
 		i = i2;
 	}
-	int16_t period = 32000 / freq;			//period is the itervalltime
+	int16_t period = 8000 / freq;			//period is the itervalltime
 	int16_t out;	//out is the funktions feedback
 	int16_t test;
 	float t;
@@ -249,7 +256,7 @@ int square(int freq, int oct, bool oszi){
 	else if (oszi){
 		i = i2;
 	}
-	int16_t period = 32000 / freq;
+	int16_t period = 8000 / freq;
 	int16_t out;
 	int16_t test;
 	int16_t test1;
@@ -292,7 +299,7 @@ int triangle(int freq, int oct, bool oszi){
 	else if (oszi){
 		i = i2;
 	}
-	int16_t period = 32000 / freq;
+	int16_t period = 8000 / freq;
 	static bool up1 = true;
 	static bool up2 = true;
 	int16_t out = 0;
@@ -375,12 +382,15 @@ int sine(int freq, int oct, bool oszi){		//oct soll octave shifting brigen, dafü
 		x = (1<<oct);
 		x = 1 / x;
 	}
+	else if (oct == 0){
+		x = 1;
+	}
 	t = i;
-	t = t / 32000;
+	t = t / 8000;
 	s = sin(2*PI*x*freq*t);
 	out = s * 16000;
 	i++;
-	if (i == 32000){
+	if (i == 8000){
 		i = 0;
 	}
 	
