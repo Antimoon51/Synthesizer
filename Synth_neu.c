@@ -211,6 +211,9 @@ int main(void)
 
 // prototypes
 int sawtooth(int freq, int oct, bool oszi){
+	if (freq == 0){
+		return 0;
+	}
 	static int16_t i;	//needs to be static, to be counted each time function is called
 	if (!oszi){
 		i = i1;
@@ -223,6 +226,9 @@ int sawtooth(int freq, int oct, bool oszi){
 	int16_t test;
 	float t;
 	float x = 0;
+	if (oct == 0){
+		x = 1;
+	}
 	if (oct > 0){
 		x = (1<<oct);
 	}
@@ -249,6 +255,9 @@ int sawtooth(int freq, int oct, bool oszi){
 }
 
 int square(int freq, int oct, bool oszi){
+	if (freq == 0){
+	return 0;
+	}
 	static int16_t i;
 	if (!oszi){
 		i = i1;
@@ -262,6 +271,9 @@ int square(int freq, int oct, bool oszi){
 	int16_t test1;
 	float t;
 	float x = 0;
+	if (oct == 0){
+		x = 1;
+	}
 	if (oct > 0){
 		x = (1<<oct);
 	}
@@ -299,6 +311,9 @@ int triangle(int freq, int oct, bool oszi){
 	else if (oszi){
 		i = i2;
 	}
+	if (freq == 0){
+		return 0;
+	}
 	int16_t period = 8000 / freq;
 	static bool up1 = true;
 	static bool up2 = true;
@@ -307,6 +322,9 @@ int triangle(int freq, int oct, bool oszi){
 	int16_t test;
 	
 	float x = 0;
+	if (oct == 0){
+		x = 1;
+	}
 	if (oct > 0){
 		x = (1<<oct);
 	}
@@ -364,6 +382,9 @@ int triangle(int freq, int oct, bool oszi){
 
 int sine(int freq, int oct, bool oszi){		//oct soll octave shifting brigen, dafür muss oct werte von 1,2,4,8,16 oder 1/2,1/4,1/8,1/16 annehmen
 	static int16_t i;
+	if (freq == 0){
+		return 0;
+	}
 	if (!oszi){
 		i = i1;
 	}
